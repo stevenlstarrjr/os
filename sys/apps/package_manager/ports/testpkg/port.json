@@ -1,5 +1,0 @@
-{
-  "name": "testpkg",
-  "version": "2.0.0",
-  "dependencies": ["dep-pkg"]
-}

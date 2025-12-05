@@ -1,9 +1,0 @@
-{
-  "name": "boost",
-  "version": "1.83.0",
-  "description": "Boost provides free peer-reviewed portable C++ source libraries.",
-  "synopsis": "Peer-reviewed portable C++ source libraries",
-  "license": "BSL-1.0",
-  "homepage": "https://www.boost.org/",
-  "dependencies": []
-}
