@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hultrix FHS Specification</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 1rem; color: var(--text-secondary); }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-primary); font-weight: 600; }
+        code.inline { background: var(--bg-secondary); padding: 0.2rem 0.4rem; border-radius: 4px; color: var(--accent); font-family: var(--font-mono); font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <a href="#" class="logo">Hultrix OS</a>
+        
+        <ul class="nav-links">
+            <li class="nav-section">Overview</li>
+            <li class="nav-item"><a href="#philosophy" class="nav-link active">Philosophy</a></li>
+            <li class="nav-item"><a href="#root-structure" class="nav-link">Root Hierarchy</a></li>
+            
+            <li class="nav-section">System Core</li>
+            <li class="nav-item"><a href="#sys-dir" class="nav-link">/sys Definitions</a></li>
+            <li class="nav-item"><a href="#user-dir" class="nav-link">User Space</a></li>
+
+            <li class="nav-section">Applications</li>
+            <li class="nav-item"><a href="#bundles" class="nav-link">App Bundles</a></li>
+            <li class="nav-item"><a href="#manifest" class="nav-link">Manifest (meta.json)</a></li>
+            
+            <li class="nav-section">SDK</li>
+            <li class="nav-item"><a href="#sdk-integration" class="nav-link">Path Resolution</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        
+        <section id="philosophy">
+            <h1>Filesystem Hierarchy Standard</h1>
+            <p>Version 1.0 &bull; Hultrix Operating System</p>
+            
+            <h2>1. Philosophy</h2>
+            <p>The Hultrix Filesystem Hierarchy Standard (HFHS) observes a <strong>Dual-Personality Architecture</strong>. The system is strictly divided into two visual and functional domains:</p>
+            <ul>
+                <li><strong>The System Layer (Lowercase):</strong> Optimized for efficiency, scripting, and administrators. Located at the root (e.g., <code class="inline">/sys</code>, <code class="inline">/apps</code>).</li>
+                <li><strong>The User Layer (Capitalized):</strong> Optimized for presentation and GUI discoverability. Located within the user home (e.g., <code class="inline">~/Documents</code>, <code class="inline">~/Applications</code>).</li>
+            </ul>
+        </section>
+
+        <section id="root-structure">
+            <h2>2. Root Directory Structure</h2>
+            <p>The root directory <code class="inline">/</code> is the domain of the OS administrator and is kept intentionally sparse.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline">/apps</code></td>
+                        <td>Dir</td>
+                        <td>Global Application Bundles (<code class="inline">.app</code>). Read-only for users.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/logs</code></td>
+                        <td>Mount</td>
+                        <td>Persistent storage for system and service logs.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/mnt</code></td>
+                        <td>Dir</td>
+                        <td>Mount points for external drives, network shares, and virtual volumes.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/pub</code></td>
+                        <td>Dir</td>
+                        <td>Public shared files accessible to all users.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/sys</code></td>
+                        <td>Dir</td>
+                        <td><strong>System Core.</strong> The immutable operating system engine.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/tmp</code></td>
+                        <td>Tmpfs</td>
+                        <td>Volatile RAM disk. Cleared on reboot. Holds PID/Lock files.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">/usr</code></td>
+                        <td>Dir</td>
+                        <td>Parent directory for user home folders.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="sys-dir">
+            <h2>3. The System Core (/sys)</h2>
+            <p>To prevent root clutter, all operating system internals are encapsulated within <code class="inline">/sys</code>. This directory is typically mounted as <strong>Read-Only</strong>.</p>
+            
+<pre><code>/sys
+├── <span class="string">apps</span>      <span class="comment"># Base system tools (flat binaries: sh, ls, cp, init)</span>
+├── <span class="string">boot</span>      <span class="comment"># Mount Point: EFI System Partition (Kernel, Initrd)</span>
+├── <span class="string">conf</span>      <span class="comment"># System-wide configuration text files</span>
+├── <span class="string">dev</span>       <span class="comment"># Mount Point: Device nodes (devtmpfs)</span>
+├── <span class="string">lib</span>       <span class="comment"># Core system libraries (libc.so, ld.so)</span>
+├── <span class="string">proc</span>      <span class="comment"># Mount Point: Process information (procfs)</span>
+└── <span class="string">subs</span>      <span class="comment"># Mount Point: Kernel subsystems (sysfs)</span></code></pre>
+        </section>
+
+        <section id="user-dir">
+            <h2>4. User Space</h2>
+            <p>The user directory is the "product" the consumer sees. It utilizes Capitalized naming for visual hierarchy and GUI integration.</p>
+            <p><strong>Path:</strong> <code class="inline">/usr/username/</code></p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Directory</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="inline">~/Applications</code></td>
+                        <td>User-installed App Bundles (<code class="inline">.app</code>).</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">~/Desktop</code></td>
+                        <td>Files rendered on the graphical desktop background.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">~/Documents</code></td>
+                        <td>Personal files and projects.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">~/Downloads</code></td>
+                        <td>Default location for web browser downloads.</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">~/Media</code></td>
+                        <td>Multimedia root (<code class="inline">Music/</code>, <code class="inline">Video/</code>).</td>
+                    </tr>
+                    <tr>
+                        <td><code class="inline">~/.conf</code></td>
+                        <td>Hidden directory for per-user app configuration.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="bundles">
+            <h2>5. Application Bundles</h2>
+            <p>Applications are directories ending in <code class="inline">.app</code> that act as files. They are self-contained and require no installation scripts.</p>
+
+<pre><code>SpaceGame.app/
+├── <span class="function">Run</span>               <span class="comment"># (Executable) Entry Point script</span>
+├── <span class="string">meta.json</span>         <span class="comment"># (File) Application Manifest</span>
+├── <span class="string">icon.png</span>          <span class="comment"># (File) High-res icon</span>
+├── <span class="string">bin/</span>              <span class="comment"># Compiled binaries (hidden from user)</span>
+├── <span class="string">lib/</span>              <span class="comment"># Private libraries (.so)</span>
+└── <span class="string">res/</span>              <span class="comment"># Assets (fonts, img, shaders)</span></code></pre>
+
+            <h3>The Run Script</h3>
+            <p>The entry point must setup the environment to prefer local libraries.</p>
+<pre><code><span class="preprocessor">#!/sys/bin/sh</span>
+
+<span class="comment"># Resolve absolute path</span>
+HERE=<span class="string">"$(dirname "$(readlink -f "$0")")"</span>
+
+<span class="comment"># Prioritize bundle libraries</span>
+<span class="keyword">export</span> LD_LIBRARY_PATH=<span class="string">"$HERE/lib:$LD_LIBRARY_PATH"</span>
+
+<span class="comment"># Execute binary</span>
+<span class="keyword">exec</span> <span class="string">"$HERE/bin/space_game_bin"</span> <span class="string">"$@"</span></code></pre>
+        </section>
+
+        <section id="manifest">
+            <h2>6. Manifest Schema (meta.json)</h2>
+            <p>Every application must contain a <code class="inline">meta.json</code> at its root. This replaces complex Info.plist or desktop entries.</p>
+
+<pre><code>{
+  <span class="keyword">"id"</span>: <span class="string">"com.studio.spacegame"</span>,
+  <span class="keyword">"name"</span>: <span class="string">"Space Invaders 3D"</span>,
+  <span class="keyword">"version"</span>: <span class="string">"1.0.5"</span>,
+  <span class="keyword">"type"</span>: <span class="string">"Application"</span>,
+  <span class="keyword">"categories"</span>: [<span class="string">"Game"</span>],
+  <span class="keyword">"permissions"</span>: [<span class="string">"network"</span>, <span class="string">"audio"</span>],
+  <span class="keyword">"associates"</span>: [<span class="string">".sav"</span>]
+}</code></pre>
+        </section>
+
+        <section id="sdk-integration">
+            <h2>7. SDK Integration</h2>
+            <p>The Hultrix C++ SDK standardizes path resolution to abstract the filesystem layout from the developer.</p>
+            
+<pre><code><span class="keyword">namespace</span> <span class="type">Hultrix</span>::<span class="type">System</span> {
+
+    <span class="type">std</span>::<span class="type">filesystem</span>::<span class="type">path</span> <span class="function">GetConfigDir</span>() {
+        <span class="comment">// Returns: /usr/steven/.conf/com.studio.spacegame/</span>
+        <span class="keyword">return</span> <span class="function">GetHomeDir</span>() / <span class="string">".conf"</span> / <span class="function">GetAppID</span>();
+    }
+
+    <span class="type">std</span>::<span class="type">filesystem</span>::<span class="type">path</span> <span class="function">GetResource</span>(<span class="type">std</span>::<span class="type">string</span> file) {
+        <span class="comment">// Returns: /apps/SpaceGame.app/res/{file}</span>
+        <span class="keyword">return</span> <span class="function">GetBundleRoot</span>() / <span class="string">"res"</span> / file;
+    }
+}</code></pre>
+        </section>
+
+        <footer class="footer">
+            <p>&copy; 2025 Hultrix Operating System Project</p>
+        </footer>
+
+    </main>
+</body>
+</html>
